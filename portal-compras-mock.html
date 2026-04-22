@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Compras — Etapa 1</title>
+<style>
+  /* ─── RESET & BASE ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary:    #1A3C6E;
+    --primary-lt: #2356A0;
+    --accent:     #0097A7;
+    --success:    #2E7D32;
+    --warning:    #F57F17;
+    --danger:     #C62828;
+    --gray-50:    #F8F9FA;
+    --gray-100:   #F1F3F5;
+    --gray-200:   #E9ECEF;
+    --gray-300:   #DEE2E6;
+    --gray-500:   #ADB5BD;
+    --gray-700:   #495057;
+    --gray-900:   #212529;
+    --white:      #FFFFFF;
+    --shadow-sm:  0 1px 3px rgba(0,0,0,.10);
+    --shadow-md:  0 4px 12px rgba(0,0,0,.12);
+    --shadow-lg:  0 8px 24px rgba(0,0,0,.15);
+    --radius:     8px;
+    --radius-lg:  12px;
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    color: var(--gray-900);
+    background: var(--gray-100);
+    min-height: 100vh;
+  }
+
+  /* ─── TOPBAR ────────────────────────────────────────────────── */
+  .topbar {
+    background: var(--primary);
+    color: var(--white);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+    gap: 16px;
+  }
+  .topbar-logo {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar-logo svg { opacity: .9; }
+  .topbar-sep { flex: 1; }
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    opacity: .92;
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .topbar-back-btn {
+    background: rgba(255,255,255,.15);
+    border: none;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+    transition: background .2s;
+  }
+  .topbar-back-btn:hover { background: rgba(255,255,255,.25); }
+
+  /* ─── SCREEN SYSTEM ─────────────────────────────────────────── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .page-body { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+  .page-title {
+    font-size: 22px; font-weight: 700; color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .page-subtitle { color: var(--gray-700); font-size: 13px; margin-bottom: 24px; }
+
+  /* ─── CARDS ─────────────────────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+  }
+  .card-body { padding: 24px; }
+  .card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 15px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ─── LANDING PAGE ──────────────────────────────────────────── */
+  .landing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 8px;
+  }
+  .module-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: box-shadow .2s, transform .15s, border-color .2s;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .module-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+  .module-card.disabled { opacity: .5; cursor: not-allowed; }
+  .module-card.disabled:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--gray-200); }
+  .module-icon {
+    width: 52px; height: 52px;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .module-icon.blue   { background: #E3F0FF; }
+  .module-icon.teal   { background: #E0F7FA; }
+  .module-icon.orange { background: #FFF3E0; }
+  .module-icon.green  { background: #E8F5E9; }
+  .module-card h3 { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .module-card p  { font-size: 13px; color: var(--gray-700); line-height: 1.5; }
+  .module-badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+    background: var(--gray-200); color: var(--gray-700);
+    align-self: flex-start;
+  }
+  .module-badge.active { background: #E0F7FA; color: #00838F; }
+  .landing-welcome {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .landing-welcome h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .landing-welcome p  { font-size: 13px; opacity: .85; }
+  .landing-welcome .welcome-icon { font-size: 40px; }
+
+  /* ─── TABS ───────────────────────────────────────────────────── */
+  .tabs-nav {
+    display: flex; gap: 0;
+    border-bottom: 2px solid var(--gray-200);
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    padding: 10px 20px;
+    border: none; background: none;
+    font-size: 14px; font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .2s, border-color .2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tab-btn:hover { color: var(--primary-lt); }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--accent); }
+  .tab-btn .tab-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--gray-200); color: var(--gray-700);
+    font-size: 11px; display: flex; align-items: center; justify-content: center;
+  }
+  .tab-btn.done .tab-check { background: var(--success); color: #fff; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ─── FORM ELEMENTS ──────────────────────────────────────────── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .form-grid-2 { grid-template-columns: 1fr 1fr; }
+  .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1/-1; }
+  label {
+    font-size: 12px; font-weight: 600;
+    color: var(--gray-700); letter-spacing: .3px;
+  }
+  label .req { color: var(--danger); margin-left: 2px; }
+  input[type=text], input[type=email], input[type=number],
+  select, textarea {
+    border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--gray-900);
+    background: var(--white);
+    transition: border-color .2s, box-shadow .2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,151,167,.12);
+  }
+  input.error, select.error, textarea.error {
+    border-color: var(--danger);
+    background: #FFF5F5;
+  }
+  .field-error { font-size: 11px; color: var(--danger); margin-top: 2px; display: none; }
+  .field-error.show { display: block; }
+  textarea { resize: vertical; min-height: 80px; }
+  .section-sep { border: none; border-top: 1px solid var(--gray-200); margin: 24px 0; }
+  .section-label {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--gray-500); margin-bottom: 16px;
+  }
+
+  /* ─── RADIO / TOGGLE ─────────────────────────────────────────── */
+  .radio-group { display: flex; gap: 12px; }
+  .radio-opt {
+    display: flex; align-items: center; gap: 7px;
+    cursor: pointer; font-size: 14px;
+  }
+  .radio-opt input { width: auto; }
+  .conditional-block {
+    background: var(--gray-50);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 12px;
+  }
+  .conditional-block.hidden { display: none; }
+
+  /* ─── FILE UPLOAD ────────────────────────────────────────────── */
+  .file-upload-zone {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  .file-upload-zone:hover { border-color: var(--accent); background: #F0FAFB; }
+  .file-upload-zone input[type=file] { display: none; }
+  .file-upload-zone .upload-icon { font-size: 24px; margin-bottom: 6px; }
+  .file-upload-zone p { font-size: 13px; color: var(--gray-700); }
+  .file-upload-zone .file-name {
+    margin-top: 8px; font-size: 12px; color: var(--success); font-weight: 600;
+    display: none;
+  }
+  .file-upload-zone.has-file { border-color: var(--success); background: #F1F9F1; }
+  .file-upload-zone.has-file .file-name { display: block; }
+  .file-upload-zone.required-missing { border-color: var(--danger); }
+
+  /* ─── ITEMS TABLE ────────────────────────────────────────────── */
+  .items-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .items-table th {
+    background: var(--gray-100); text-align: left; padding: 10px 12px;
+    font-weight: 600; color: var(--gray-700); border-bottom: 2px solid var(--gray-200);
+    font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
+  }
+  .items-table td {
+    padding: 8px 12px; border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle;
+  }
+  .items-table td input { border: 1.5px solid var(--gray-300); border-radius: 6px; padding: 6px 8px; width: 100%; font-size: 13px; }
+  .btn-icon {
+    background: none; border: none; cursor: pointer; padding: 4px 8px;
+    border-radius: 6px; font-size: 16px; color: var(--danger);
+    transition: background .15s;
+  }
+  .btn-icon:hover { background: #FFF0F0; }
+  .btn-add-row {
+    margin-top: 10px; background: none; border: 1.5px dashed var(--gray-300);
+    color: var(--gray-700); padding: 8px 14px; border-radius: var(--radius);
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: border-color .2s, color .2s;
+  }
+  .btn-add-row:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── BUTTONS ────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 20px; border-radius: var(--radius);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    border: none; transition: all .2s; font-family: inherit;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-lt); }
+  .btn-secondary { background: var(--white); color: var(--gray-700); border: 1.5px solid var(--gray-300); }
+  .btn-secondary:hover { border-color: var(--gray-500); background: var(--gray-50); }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: #00838F; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #B71C1C; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #1B5E20; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+  .btn-outline-primary { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn-outline-primary:hover { background: var(--primary); color: #fff; }
+
+  /* ─── ACTION BAR ─────────────────────────────────────────────── */
+  .action-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--white);
+    border-top: 1px solid var(--gray-200);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    gap: 12px;
+  }
+  .action-bar-right { display: flex; gap: 10px; }
+  .action-bar-left  { display: flex; gap: 10px; }
+
+  /* ─── STEPPER ────────────────────────────────────────────────── */
+  .stepper {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 28px;
+  }
+  .step {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--gray-500);
+  }
+  .step.active { color: var(--primary); }
+  .step.done   { color: var(--success); }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--gray-200); color: var(--gray-700);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .step.active .step-num { background: var(--primary); color: #fff; }
+  .step.done   .step-num { background: var(--success); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: var(--gray-200); min-width: 32px; }
+  .step-line.done { background: var(--success); }
+
+  /* ─── BADGE / STATUS ─────────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .badge-draft    { background: var(--gray-100); color: var(--gray-700); }
+  .badge-draft .badge-dot { background: var(--gray-500); }
+  .badge-pending  { background: #FFF8E1; color: #F57F17; }
+  .badge-pending .badge-dot { background: #F57F17; }
+  .badge-review   { background: #E3F2FD; color: #1565C0; }
+  .badge-review .badge-dot { background: #1565C0; }
+  .badge-approved { background: #E8F5E9; color: var(--success); }
+  .badge-approved .badge-dot { background: var(--success); }
+  .badge-returned { background: #FFF3E0; color: #E65100; }
+  .badge-returned .badge-dot { background: #E65100; }
+
+  /* ─── TABLE ──────────────────────────────────────────────────── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th {
+    background: var(--gray-50); text-align: left;
+    padding: 11px 14px; font-weight: 600; color: var(--gray-700);
+    border-bottom: 2px solid var(--gray-200);
+    font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
+    white-space: nowrap;
+  }
+  .data-table th.sortable { cursor: pointer; user-select: none; }
+  .data-table th.sortable:hover { color: var(--primary); }
+  .data-table td {
+    padding: 12px 14px; border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle; color: var(--gray-900);
+  }
+  .data-table tr:hover td { background: var(--gray-50); }
+  .data-table .td-muted { color: var(--gray-500); font-size: 12px; }
+
+  /* ─── FILTERS BAR ────────────────────────────────────────────── */
+  .filters-bar {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    padding: 16px 20px; background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    align-items: center;
+  }
+  .filter-select {
+    padding: 7px 12px; border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius); font-size: 13px; color: var(--gray-700);
+    background: var(--white); cursor: pointer;
+  }
+  .search-input {
+    flex: 1; min-width: 200px;
+    padding: 7px 12px 7px 34px;
+    border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius); font-size: 13px;
+    background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ADB5BD' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") 10px center no-repeat;
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+
+  /* ─── DETAIL VIEW ────────────────────────────────────────────── */
+  .detail-section { margin-bottom: 28px; }
+  .detail-section h4 {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .6px; color: var(--gray-500); margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--gray-200);
+  }
+  .detail-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .detail-field label { font-size: 11px; font-weight: 600; color: var(--gray-500); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .4px; }
+  .detail-field p { font-size: 14px; color: var(--gray-900); }
+  .doc-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--gray-100); border: 1px solid var(--gray-200);
+    border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600;
+    color: var(--primary); cursor: pointer; margin: 4px 4px 4px 0;
+    transition: background .2s;
+  }
+  .doc-chip:hover { background: var(--gray-200); }
+
+  /* ─── TIMELINE ───────────────────────────────────────────────── */
+  .timeline { list-style: none; padding: 0; }
+  .timeline li {
+    display: flex; gap: 14px; padding-bottom: 16px;
+    position: relative;
+  }
+  .timeline li::before {
+    content: ''; position: absolute; left: 14px; top: 24px;
+    width: 2px; bottom: 0; background: var(--gray-200);
+  }
+  .timeline li:last-child::before { display: none; }
+  .tl-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--gray-200); border: 3px solid var(--white);
+    box-shadow: 0 0 0 2px var(--gray-300);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .tl-dot.ok  { background: var(--success); box-shadow: 0 0 0 2px #A5D6A7; }
+  .tl-dot.cur { background: var(--accent);  box-shadow: 0 0 0 2px #80DEEA; }
+  .tl-content p { font-size: 13px; color: var(--gray-900); font-weight: 600; }
+  .tl-content span { font-size: 12px; color: var(--gray-500); }
+
+  /* ─── TOASTS ─────────────────────────────────────────────────── */
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 10px; z-index: 9999;
+  }
+  .toast {
+    background: var(--gray-900); color: #fff;
+    padding: 12px 18px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px;
+    animation: slideIn .3s ease;
+    min-width: 260px;
+  }
+  .toast.success { background: var(--success); }
+  .toast.warning { background: var(--warning); }
+  .toast.error   { background: var(--danger); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+  /* ─── MODAL ──────────────────────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 500;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--white); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%; max-width: 680px; max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .modal-close {
+    background: none; border: none; font-size: 20px; cursor: pointer;
+    color: var(--gray-500); line-height: 1;
+  }
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 16px 24px; border-top: 1px solid var(--gray-200);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+
+  /* ─── SUMMARY CARD ───────────────────────────────────────────── */
+  .summary-box {
+    background: var(--gray-50);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .summary-box h4 { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+  .summary-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--gray-200); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .s-label { color: var(--gray-700); }
+  .summary-row .s-val   { font-weight: 600; color: var(--gray-900); }
+
+  /* ─── TRACKING ───────────────────────────────────────────────── */
+  .tracking-progress {
+    display: flex; align-items: center; gap: 0;
+    margin: 20px 0;
+  }
+  .tp-step {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    flex: 1; position: relative;
+  }
+  .tp-step::before {
+    content: ''; position: absolute; top: 16px; left: -50%; right: 50%;
+    height: 3px; background: var(--gray-200); z-index: 0;
+  }
+  .tp-step:first-child::before { display: none; }
+  .tp-step.done::before { background: var(--success); }
+  .tp-circle {
+    width: 32px; height: 32px; border-radius: 50%; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; border: 3px solid var(--gray-200);
+    background: var(--white);
+  }
+  .tp-step.done  .tp-circle { border-color: var(--success); background: var(--success); color: #fff; }
+  .tp-step.cur   .tp-circle { border-color: var(--accent);  background: var(--accent);  color: #fff; }
+  .tp-step p { font-size: 11px; font-weight: 600; color: var(--gray-500); text-align: center; }
+  .tp-step.done p { color: var(--success); }
+  .tp-step.cur  p { color: var(--accent);  }
+
+  /* ─── INFO ALERT ─────────────────────────────────────────────── */
+  .alert {
+    padding: 12px 16px; border-radius: var(--radius);
+    font-size: 13px; display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .alert-warning { background: #FFF8E1; border: 1px solid #FFECB3; color: #795548; }
+  .alert-info    { background: #E3F2FD; border: 1px solid #BBDEFB; color: #1565C0; }
+  .alert-success { background: #E8F5E9; border: 1px solid #C8E6C9; color: var(--success); }
+  .alert .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ─── RESPONSIVE ─────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .page-body { padding: 16px; }
+    .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+    .tabs-nav { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  TOPBAR                                                  ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    Portal de Compras
+  </div>
+  <span style="font-size:12px;opacity:.55;margin-left:4px">/ Etapa 1</span>
+  <div class="topbar-sep"></div>
+  <span id="topbar-breadcrumb" style="font-size:13px;opacity:.8"></span>
+  <div class="topbar-user">
+    <div class="avatar">MV</div>
+    <div>
+      <div style="font-weight:600;line-height:1.2">Martín V.</div>
+      <div style="font-size:11px;opacity:.7">Solicitante</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  SCREEN 1 — LANDING PAGE                                 ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="screen-landing" class="screen active">
+  <div class="page-body">
+    <div class="landing-welcome">
+      <div class="welcome-icon">🛒</div>
+      <div>
+        <h2>Bienvenido, Martín</h2>
+        <p>Portal de Compras — Etapa 1: Solicitud de Proyecto. Selecciona el módulo que deseas utilizar.</p>
+      </div>
+    </div>
+
+    <div class="page-title">Módulos disponibles</div>
+    <div class="page-subtitle">Tu acceso está configurado según tu perfil. Los módulos sombreados se habilitarán en fases futuras.</div>
+
+    <div class="landing-grid">
+      <div class="module-card" onclick="goTo('screen-solicitud')">
+        <div class="module-icon blue">📋</div>
+        <h3>Alta de Solicitud de Compra</h3>
+        <p>Registra una nueva solicitud de compra asociada a un proyecto, adjunta documentación y envía al área de Compras.</p>
+        <span class="module-badge active">✔ Disponible — Proyecto</span>
+      </div>
+
+      <div class="module-card" onclick="goTo('screen-proveedor')">
+        <div class="module-icon teal">🏢</div>
+        <h3>Solicitud de Alta de Proveedor</h3>
+        <p>Inicia el registro de un proveedor que aún no existe en el catálogo para incluirlo en tus solicitudes.</p>
+        <span class="module-badge active">✔ Disponible</span>
+      </div>
+
+      <div class="module-card" onclick="goTo('screen-seguimiento')">
+        <div class="module-icon orange">📦</div>
+        <h3>Seguimiento a Órdenes de Compra</h3>
+        <p>Consulta el estado actual de tus órdenes de compra emitidas y el avance en la entrega.</p>
+        <span class="module-badge active">✔ Disponible</span>
+      </div>
+
+      <div class="module-card" onclick="goTo('screen-revision')">
+        <div class="module-icon green">🔍</div>
+        <h3>Revisión de Solicitudes</h3>
+        <p>Área de Compras: consulta, revisa y da seguimiento a todas las solicitudes registradas.</p>
+        <span class="module-badge active">✔ Disponible — Compras</span>
+      </div>
+    </div>
+
+    <!-- Phase roadmap -->
+    <div style="margin-top:36px">
+      <div class="page-subtitle" style="margin-bottom:14px;font-size:12px;text-transform:uppercase;font-weight:700;letter-spacing:.5px;color:var(--gray-500)">Próximas etapas del portal</div>
+      <div class="card">
+        <div class="card-body" style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px;opacity:.45">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px">Etapa 2 — Refacciones</div>
+            <div style="font-size:12px;color:var(--gray-700)">Solicitudes de compra para refacciones y consumibles.</div>
+          </div>
+          <div style="flex:1;min-width:180px;opacity:.45">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px">Etapa 3 — Servicio / DMQP</div>
+            <div style="font-size:12px;color:var(--gray-700)">Módulos de servicio técnico y DMQP-SA.</div>
+          </div>
+          <div style="flex:1;min-width:180px;opacity:.45">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px">Etapa 4 — CAPEX / Generales</div>
+            <div style="font-size:12px;color:var(--gray-700)">Compras de capital y gastos generales.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  SCREEN 2 — CAPTURA DE SOLICITUD DE PROYECTO             ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="screen-solicitud" class="screen">
+  <div class="page-body">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <button class="btn btn-secondary btn-sm" onclick="goTo('screen-landing')">← Inicio</button>
+      <div class="page-title" style="margin-bottom:0">Nueva Solicitud de Compra — Proyecto</div>
+    </div>
+    <div class="page-subtitle">Completa las tres secciones para enviar tu solicitud al área de Compras.</div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step active" id="step-1">
+        <div class="step-num">1</div>
+        <span>Datos del Proyecto</span>
+      </div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step" id="step-2">
+        <div class="step-num">2</div>
+        <span>Validación Presupuestaria</span>
+      </div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step" id="step-3">
+        <div class="step-num">3</div>
+        <span>Logística</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- Tabs nav -->
+      <div style="padding:0 24px">
+        <div class="tabs-nav">
+          <button class="tab-btn active" id="tab-btn-1" onclick="switchTab(1)">
+            <div class="tab-check" id="check-1">1</div> Datos del Proyecto
+          </button>
+          <button class="tab-btn" id="tab-btn-2" onclick="switchTab(2)">
+            <div class="tab-check" id="check-2">2</div> Validación Presupuestaria
+          </button>
+          <button class="tab-btn" id="tab-btn-3" onclick="switchTab(3)">
+            <div class="tab-check" id="check-3">3</div> Logística
+          </button>
+        </div>
+      </div>
+
+      <!-- ── TAB 1: Datos del Proyecto ── -->
+      <div class="tab-panel active" id="tab-panel-1">
+        <div class="card-body">
+          <div class="section-label">Información del Solicitante</div>
+          <div class="form-grid form-grid-2">
+            <div class="form-group">
+              <label>Solicitante <span class="req">*</span></label>
+              <input type="text" id="f-solicitante" value="Martín Vázquez" readonly style="background:var(--gray-50)">
+            </div>
+            <div class="form-group">
+              <label>Correo electrónico <span class="req">*</span></label>
+              <input type="email" id="f-email-sol" value="martin.vc3@gmail.com" readonly style="background:var(--gray-50)">
+            </div>
+          </div>
+
+          <hr class="section-sep">
+          <div class="section-label">Datos del Proyecto</div>
+          <div class="form-grid form-grid-2">
+            <div class="form-group">
+              <label>Número de Proyecto <span class="req">*</span></label>
+              <input type="text" id="f-num-proyecto" placeholder="Ej. PROY-2024-001">
+              <span class="field-error" id="err-num-proyecto">Campo requerido</span>
+            </div>
+            <div class="form-group">
+              <label>PO del Cliente <span class="req">*</span></label>
+              <input type="text" id="f-po-cliente" placeholder="Ej. PO-987654">
+              <span class="field-error" id="err-po-cliente">Campo requerido</span>
+            </div>
+            <div class="form-group">
+              <label>Sales Workflow <span class="req">*</span></label>
+              <input type="text" id="f-sales-wf" placeholder="Ej. SW-2024-055">
+              <span class="field-error" id="err-sales-wf">Campo requerido</span>
+            </div>
+            <div class="form-group">
+              <label>Cliente <span class="req">*</span></label>
+              <select id="f-cliente">
+                <option value="">— Selecciona cliente —</option>
+                <option>Cliente ABC S.A. de C.V.</option>
+                <option>Industrias XYZ</option>
+                <option>Manufactura del Norte</option>
+              </select>
+              <span class="field-error" id="err-cliente">Campo requerido</span>
+            </div>
+            <div class="form-group">
+              <label>Máquina <span class="req">*</span></label>
+              <select id="f-maquina">
+                <option value="">— Selecciona máquina —</option>
+                <option>Torno CNC-01</option>
+                <option>Fresadora VMC-12</option>
+                <option>Robot ABB-05</option>
+              </select>
+              <span class="field-error" id="err-maquina">Campo requerido</span>
+            </div>
+            <div class="form-group">
+              <label>Número de Serie <span class="req">*</span></label>
+              <input type="text" id="f-num-serie" placeholder="Ej. SN-2024-XZ9">
+              <span class="field-error" id="err-num-serie">Campo requerido</span>
+            </div>
+          </div>
+
+          <hr class="section-sep">
+          <div class="section-label">Proveedor</div>
+          <div class="form-grid form-grid-2">
+            <div class="form-group">
+              <label>Proveedor <span class="req">*</span></label>
+              <select id="f-proveedor">
+                <option value="">— Selecciona proveedor —</option>
+                <option>Aceros del Centro S.A.</option>
+                <option>Refacciones Industriales MX</option>
+                <option>Suministros Técnicos CDMX</option>
+              </select>
+              <span class="field-error" id="err-proveedor">Campo requerido</span>
+            </div>
+            <div class="form-group" style="justify-content:flex-end;padding-top:18px">
+              <button class="btn btn-outline-primary btn-sm" onclick="goTo('screen-proveedor')">
+                + Solicitar alta de nuevo proveedor
+              </button>
+              <div style="font-size:11px;color:var(--gray-500);margin-top:6px">Si el proveedor no aparece en el catálogo</div>
+            </div>
+          </div>
+        </div>
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <button class="btn btn-secondary" onclick="saveDraft()">💾 Guardar borrador</button>
+          </div>
+          <div class="action-bar-right">
+            <button class="btn btn-primary" onclick="nextTab(1)">Siguiente: Validación →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB 2: Validación Presupuestaria ── -->
+      <div class="tab-panel" id="tab-panel-2">
+        <div class="card-body">
+          <div class="section-label">Documentos Adjuntos</div>
+          <div class="form-grid form-grid-2">
+            <div class="form-group">
+              <label>Cotización (PDF) <span class="req">*</span></label>
+              <div class="file-upload-zone" id="zone-cotizacion" onclick="triggerFile('file-cotizacion')">
+                <input type="file" id="file-cotizacion" accept=".pdf" onchange="fileSelected(this,'zone-cotizacion','name-cotizacion')">
+                <div class="upload-icon">📄</div>
+                <p>Haz clic para adjuntar PDF de cotización</p>
+                <div class="file-name" id="name-cotizacion"></div>
+              </div>
+              <span class="field-error" id="err-cotizacion">Cotización es obligatoria</span>
+            </div>
+            <div class="form-group">
+              <label>Workflow (PDF) <span class="req">*</span></label>
+              <div class="file-upload-zone" id="zone-workflow" onclick="triggerFile('file-workflow')">
+                <input type="file" id="file-workflow" accept=".pdf" onchange="fileSelected(this,'zone-workflow','name-workflow')">
+                <div class="upload-icon">📄</div>
+                <p>Haz clic para adjuntar PDF de Workflow</p>
+                <div class="file-name" id="name-workflow"></div>
+              </div>
+              <span class="field-error" id="err-workflow">Workflow es obligatorio</span>
+            </div>
+          </div>
+
+          <hr class="section-sep">
+          <div class="section-label">Descripción de Ítems</div>
+          <table class="items-table" id="items-table">
+            <thead>
+              <tr>
+                <th style="width:40%">Descripción</th>
+                <th style="width:15%">Cantidad</th>
+                <th style="width:25%">Precio Unitario (USD)</th>
+                <th style="width:15%">Total</th>
+                <th style="width:5%"></th>
+              </tr>
+            </thead>
+            <tbody id="items-body">
+              <tr>
+                <td><input type="text" placeholder="Descripción del ítem" oninput="calcTotal(this)"></td>
+                <td><input type="number" placeholder="1" min="1" oninput="calcTotal(this)"></td>
+                <td><input type="number" placeholder="0.00" step="0.01" oninput="calcTotal(this)"></td>
+                <td class="td-total">$0.00</td>
+                <td><button class="btn-icon" onclick="removeRow(this)" title="Eliminar">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="btn-add-row" onclick="addItemRow()">+ Agregar ítem</button>
+
+          <div style="text-align:right;margin-top:12px;font-weight:700;font-size:15px;color:var(--primary)">
+            Total estimado: <span id="grand-total">$0.00</span>
+          </div>
+
+          <hr class="section-sep">
+          <div class="form-group">
+            <label>Nota / Requerimiento especial</label>
+            <textarea id="f-nota" placeholder="Describe cualquier requerimiento especial o aclaración necesaria..."></textarea>
+          </div>
+
+          <hr class="section-sep">
+          <div class="section-label">Costing Sheet</div>
+          <div class="form-group">
+            <label>¿Está incluida en el Costing Sheet? <span class="req">*</span></label>
+            <div class="radio-group" style="margin-top:4px">
+              <label class="radio-opt">
+                <input type="radio" name="costing" value="si" onchange="toggleCosting(this)"> Sí
+              </label>
+              <label class="radio-opt">
+                <input type="radio" name="costing" value="no" onchange="toggleCosting(this)"> No
+              </label>
+            </div>
+          </div>
+
+          <!-- Costing SI -->
+          <div class="conditional-block hidden" id="block-costing-si">
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label>Clave de ítem SK <span class="req">*</span></label>
+                <input type="text" id="f-clave-sk" placeholder="Ej. SK-12345">
+              </div>
+              <div class="form-group">
+                <label>Monto aprobado (USD) <span class="req">*</span></label>
+                <input type="number" id="f-monto" placeholder="0.00" step="0.01">
+              </div>
+            </div>
+          </div>
+
+          <!-- Costing NO -->
+          <div class="conditional-block hidden" id="block-costing-no">
+            <div class="alert alert-warning">
+              <span class="alert-icon">⚠️</span>
+              <span>Debes justificar y adjuntar evidencia de aprobación antes de poder enviar la solicitud.</span>
+            </div>
+            <div class="form-grid form-grid-2">
+              <div class="form-group full">
+                <label>Justificación de la solicitud <span class="req">*</span></label>
+                <textarea id="f-justificacion" placeholder="Explica el motivo por el que esta compra no está incluida en el costing sheet..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Evidencia de aprobación por correo <span class="req">*</span></label>
+                <div class="file-upload-zone" id="zone-evidencia" onclick="triggerFile('file-evidencia')">
+                  <input type="file" id="file-evidencia" accept=".pdf,.png,.jpg,.eml" onchange="fileSelected(this,'zone-evidencia','name-evidencia')">
+                  <div class="upload-icon">📎</div>
+                  <p>PDF, imagen o correo exportado</p>
+                  <div class="file-name" id="name-evidencia"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <button class="btn btn-secondary" onclick="switchTab(1)">← Anterior</button>
+            <button class="btn btn-secondary" onclick="saveDraft()">💾 Guardar borrador</button>
+          </div>
+          <div class="action-bar-right">
+            <button class="btn btn-primary" onclick="nextTab(2)">Siguiente: Logística →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB 3: Logística ── -->
+      <div class="tab-panel" id="tab-panel-3">
+        <div class="card-body">
+          <div class="section-label">Datos de Entrega</div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Dirección de entrega <span class="req">*</span></label>
+              <textarea id="f-direccion" placeholder="Calle, número, colonia, ciudad, estado, CP..." style="min-height:60px"></textarea>
+              <span class="field-error" id="err-direccion">Campo requerido</span>
+            </div>
+            <div class="form-group">
+              <label>Incoterms <span class="req">*</span></label>
+              <select id="f-incoterms">
+                <option value="">— Selecciona —</option>
+                <option>DAP — Delivered At Place</option>
+                <option>DDP — Delivered Duty Paid</option>
+                <option>EXW — Ex Works</option>
+                <option>FCA — Free Carrier</option>
+                <option>FOB — Free On Board</option>
+                <option>CIF — Cost Insurance Freight</option>
+              </select>
+              <span class="field-error" id="err-incoterms">Campo requerido</span>
+            </div>
+          </div>
+
+          <hr class="section-sep">
+          <div class="section-label">Contacto para envío de PO</div>
+          <div class="form-grid form-grid-2">
+            <div class="form-group">
+              <label>Nombre del contacto <span class="req">*</span></label>
+              <input type="text" id="f-contacto" placeholder="Nombre completo">
+              <span class="field-error" id="err-contacto">Campo requerido</span>
+            </div>
+            <div class="form-group">
+              <label>Correo electrónico del contacto <span class="req">*</span></label>
+              <input type="email" id="f-email-contacto" placeholder="contacto@proveedor.com">
+              <span class="field-error" id="err-email-contacto">Campo requerido</span>
+            </div>
+          </div>
+
+          <hr class="section-sep">
+          <!-- Resumen previo al envío -->
+          <div class="section-label">Resumen de la solicitud</div>
+          <div class="summary-box">
+            <h4>📋 Verifica la información antes de enviar</h4>
+            <div id="summary-content">
+              <div class="summary-row"><span class="s-label">Solicitante</span><span class="s-val">Martín Vázquez</span></div>
+              <div class="summary-row"><span class="s-label">Tipo de solicitud</span><span class="s-val">Proyecto</span></div>
+              <div class="summary-row"><span class="s-label">Proveedor</span><span class="s-val" id="sum-proveedor">—</span></div>
+              <div class="summary-row"><span class="s-label">No. de Proyecto</span><span class="s-val" id="sum-proyecto">—</span></div>
+              <div class="summary-row"><span class="s-label">Cliente</span><span class="s-val" id="sum-cliente">—</span></div>
+              <div class="summary-row"><span class="s-label">Total estimado</span><span class="s-val" id="sum-total">—</span></div>
+              <div class="summary-row"><span class="s-label">Costing Sheet</span><span class="s-val" id="sum-costing">—</span></div>
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <span>Una vez enviada, <strong>no podrás editar</strong> la solicitud. El área de Compras podrá devolverla para corrección si es necesario.</span>
+          </div>
+        </div>
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <button class="btn btn-secondary" onclick="switchTab(2)">← Anterior</button>
+            <button class="btn btn-secondary" onclick="saveDraft()">💾 Guardar borrador</button>
+          </div>
+          <div class="action-bar-right">
+            <button class="btn btn-success" onclick="submitSolicitud()">✉️ Enviar a Compras</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  SCREEN 3 — ALTA DE PROVEEDOR                            ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="screen-proveedor" class="screen">
+  <div class="page-body">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <button class="btn btn-secondary btn-sm" onclick="history.go(-1)||goTo('screen-landing')">← Volver</button>
+      <div class="page-title" style="margin-bottom:0">Solicitud de Alta de Proveedor</div>
+    </div>
+    <div class="page-subtitle">Completa el formato para iniciar el proceso de alta. El área de Compras notificará cuando el proveedor esté disponible en catálogo.</div>
+
+    <div class="alert alert-warning">
+      <span class="alert-icon">⚠️</span>
+      <span>La solicitud de compra principal <strong>no podrá completarse</strong> hasta que el proveedor sea dado de alta y aprobado en el catálogo.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span>🏢</span> Formato de Alta de Proveedor
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <div class="badge badge-draft"><div class="badge-dot"></div> Borrador</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid form-grid-2" style="margin-bottom:8px">
+          <div class="form-group">
+            <label style="font-size:13px;font-weight:700;color:var(--primary)">Tipo de solicitud</label>
+            <div class="radio-group" style="margin-top:6px">
+              <label class="radio-opt"><input type="radio" name="tipo-alta" value="alta" checked> Alta</label>
+              <label class="radio-opt"><input type="radio" name="tipo-alta" value="modificacion"> Modificación</label>
+            </div>
+          </div>
+        </div>
+
+        <hr class="section-sep">
+        <div class="section-label">1. Información General</div>
+        <div class="form-grid form-grid-2">
+          <div class="form-group full">
+            <label>Razón Social <span class="req">*</span></label>
+            <input type="text" id="p-razon" placeholder="Nombre completo de la empresa">
+          </div>
+          <div class="form-group full">
+            <label>Dirección <span class="req">*</span></label>
+            <input type="text" id="p-direccion" placeholder="Calle y número">
+          </div>
+          <div class="form-group">
+            <label>Ciudad <span class="req">*</span></label>
+            <input type="text" id="p-ciudad" placeholder="Ciudad">
+          </div>
+          <div class="form-group">
+            <label>Código Postal <span class="req">*</span></label>
+            <input type="text" id="p-cp" placeholder="00000">
+          </div>
+          <div class="form-group">
+            <label>Teléfono <span class="req">*</span></label>
+            <input type="text" id="p-telefono" placeholder="+52 55 0000 0000">
+          </div>
+          <div class="form-group">
+            <label>RFC <span class="req">*</span></label>
+            <input type="text" id="p-rfc" placeholder="XAXX010101000">
+          </div>
+          <div class="form-group">
+            <label>Días de crédito</label>
+            <input type="number" id="p-dias-credito" placeholder="30" min="0">
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-2" style="margin-top:16px">
+          <div class="form-group">
+            <label>Contacto — Envío de Órdenes de Compra <span class="req">*</span></label>
+            <input type="text" id="p-contacto-oc" placeholder="Nombre completo">
+          </div>
+          <div class="form-group">
+            <label>E-mail — Envío de Órdenes de Compra <span class="req">*</span></label>
+            <input type="email" id="p-email-oc" placeholder="oc@proveedor.com">
+          </div>
+          <div class="form-group">
+            <label>Contacto — Envío de Pagos</label>
+            <input type="text" id="p-contacto-pago" placeholder="Nombre completo">
+          </div>
+          <div class="form-group">
+            <label>E-mail — Envío de Pagos</label>
+            <input type="email" id="p-email-pago" placeholder="pagos@proveedor.com">
+          </div>
+        </div>
+
+        <hr class="section-sep">
+        <div class="section-label">2. Información Bancaria</div>
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>Beneficiario <span class="req">*</span></label>
+            <input type="text" id="p-beneficiario" placeholder="Nombre del beneficiario">
+          </div>
+          <div class="form-group">
+            <label>Banco <span class="req">*</span></label>
+            <select id="p-banco">
+              <option value="">— Selecciona banco —</option>
+              <option>BBVA México</option>
+              <option>Santander</option>
+              <option>Banamex (Citibanamex)</option>
+              <option>HSBC</option>
+              <option>Banorte</option>
+              <option>Scotiabank</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cuenta <span class="req">*</span></label>
+            <input type="text" id="p-cuenta" placeholder="Número de cuenta">
+          </div>
+          <div class="form-group">
+            <label>CLABE interbancaria <span class="req">*</span></label>
+            <input type="text" id="p-clabe" placeholder="18 dígitos" maxlength="18">
+          </div>
+          <div class="form-group">
+            <label>Moneda <span class="req">*</span></label>
+            <select id="p-moneda">
+              <option value="">— Selecciona —</option>
+              <option>MXN — Peso mexicano</option>
+              <option>USD — Dólar americano</option>
+              <option>EUR — Euro</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="section-sep">
+        <div class="section-label">3. Documentación a entregar</div>
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>A. Constancia de Situación Fiscal <span class="req">*</span></label>
+            <div class="file-upload-zone" id="zone-csf" onclick="triggerFile('file-csf')">
+              <input type="file" id="file-csf" accept=".pdf" onchange="fileSelected(this,'zone-csf','name-csf')">
+              <div class="upload-icon">📄</div>
+              <p>Adjuntar PDF</p>
+              <div class="file-name" id="name-csf"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>B. Carátula de Estado de Cuenta Bancario <span class="req">*</span></label>
+            <div class="file-upload-zone" id="zone-banco" onclick="triggerFile('file-banco')">
+              <input type="file" id="file-banco" accept=".pdf,.jpg,.png" onchange="fileSelected(this,'zone-banco','name-banco')">
+              <div class="upload-icon">🏦</div>
+              <p>PDF o imagen</p>
+              <div class="file-name" id="name-banco"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>C. Comprobante de Domicilio <span class="req">*</span></label>
+            <div class="file-upload-zone" id="zone-domicilio" onclick="triggerFile('file-domicilio')">
+              <input type="file" id="file-domicilio" accept=".pdf,.jpg,.png" onchange="fileSelected(this,'zone-domicilio','name-domicilio')">
+              <div class="upload-icon">🏠</div>
+              <p>PDF o imagen</p>
+              <div class="file-name" id="name-domicilio"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>D. REPSE (si aplica)</label>
+            <div class="file-upload-zone" id="zone-repse" onclick="triggerFile('file-repse')">
+              <input type="file" id="file-repse" accept=".pdf" onchange="fileSelected(this,'zone-repse','name-repse')">
+              <div class="upload-icon">📋</div>
+              <p>Solo si aplica — PDF</p>
+              <div class="file-name" id="name-repse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <div class="action-bar-left">
+          <button class="btn btn-secondary" onclick="goTo('screen-landing')">← Cancelar</button>
+          <button class="btn btn-secondary" onclick="showToast('Borrador guardado','success')">💾 Guardar borrador</button>
+        </div>
+        <div class="action-bar-right">
+          <button class="btn btn-success" onclick="showToast('Solicitud de alta enviada al área de Compras','success');goTo('screen-landing')">✉️ Enviar solicitud</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  SCREEN 4 — REVISIÓN DE SOLICITUDES (Compras)            ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="screen-revision" class="screen">
+  <div class="page-body">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <button class="btn btn-secondary btn-sm" onclick="goTo('screen-landing')">← Inicio</button>
+      <div class="page-title" style="margin-bottom:0">Revisión de Solicitudes — Área de Compras</div>
+    </div>
+    <div class="page-subtitle">Consulta, filtra y revisa todas las solicitudes de proyecto registradas.</div>
+
+    <div class="card">
+      <!-- Filters -->
+      <div class="filters-bar">
+        <input class="search-input" type="text" placeholder="Buscar por solicitante, proveedor, proyecto…" oninput="filterTable(this.value)">
+        <select class="filter-select" onchange="filterByStatus(this.value)">
+          <option value="">Todos los estatus</option>
+          <option value="borrador">Borrador</option>
+          <option value="enviada">Enviada</option>
+          <option value="en-revision">En revisión</option>
+          <option value="aprobada">Aprobada</option>
+          <option value="devuelta">Devuelta</option>
+        </select>
+        <select class="filter-select">
+          <option>Todos los proveedores</option>
+          <option>Aceros del Centro</option>
+          <option>Refacciones Industriales</option>
+        </select>
+        <button class="btn btn-secondary btn-sm">📥 Exportar</button>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto">
+        <table class="data-table" id="revision-table">
+          <thead>
+            <tr>
+              <th class="sortable">Fecha ↕</th>
+              <th>Hora</th>
+              <th class="sortable">Tipo ↕</th>
+              <th class="sortable">Solicitante ↕</th>
+              <th>Proveedor</th>
+              <th class="sortable">Monto ↕</th>
+              <th>Estatus</th>
+              <th>Envío</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-status="en-revision">
+              <td>21/04/2026</td>
+              <td class="td-muted">09:42</td>
+              <td>Proyecto</td>
+              <td>Martín Vázquez</td>
+              <td>Aceros del Centro S.A.</td>
+              <td style="font-weight:600">$42,500.00</td>
+              <td><span class="badge badge-review"><div class="badge-dot"></div>En revisión</span></td>
+              <td class="td-muted">21/04/2026</td>
+              <td><button class="btn btn-primary btn-sm" onclick="goTo('screen-detalle')">Revisar</button></td>
+            </tr>
+            <tr data-status="enviada">
+              <td>18/04/2026</td>
+              <td class="td-muted">14:15</td>
+              <td>Proyecto</td>
+              <td>Laura Pérez</td>
+              <td>Refacciones Industriales MX</td>
+              <td style="font-weight:600">$15,200.00</td>
+              <td><span class="badge badge-pending"><div class="badge-dot"></div>Enviada</span></td>
+              <td class="td-muted">18/04/2026</td>
+              <td><button class="btn btn-primary btn-sm" onclick="goTo('screen-detalle')">Revisar</button></td>
+            </tr>
+            <tr data-status="aprobada">
+              <td>15/04/2026</td>
+              <td class="td-muted">11:30</td>
+              <td>Proyecto</td>
+              <td>Carlos Mendoza</td>
+              <td>Suministros Técnicos CDMX</td>
+              <td style="font-weight:600">$88,000.00</td>
+              <td><span class="badge badge-approved"><div class="badge-dot"></div>Aprobada</span></td>
+              <td class="td-muted">15/04/2026</td>
+              <td><button class="btn btn-secondary btn-sm" onclick="goTo('screen-detalle')">Ver detalle</button></td>
+            </tr>
+            <tr data-status="devuelta">
+              <td>10/04/2026</td>
+              <td class="td-muted">16:55</td>
+              <td>Proyecto</td>
+              <td>Ana Torres</td>
+              <td>Aceros del Centro S.A.</td>
+              <td style="font-weight:600">$7,800.00</td>
+              <td><span class="badge badge-returned"><div class="badge-dot"></div>Devuelta</span></td>
+              <td class="td-muted">10/04/2026</td>
+              <td><button class="btn btn-secondary btn-sm" onclick="goTo('screen-detalle')">Ver detalle</button></td>
+            </tr>
+            <tr data-status="borrador">
+              <td>08/04/2026</td>
+              <td class="td-muted">08:20</td>
+              <td>Proyecto</td>
+              <td>Roberto Gómez</td>
+              <td>—</td>
+              <td class="td-muted">—</td>
+              <td><span class="badge badge-draft"><div class="badge-dot"></div>Borrador</span></td>
+              <td class="td-muted">—</td>
+              <td><button class="btn btn-secondary btn-sm" onclick="showToast('Solo el solicitante puede editar borradores','warning')">Ver</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--gray-200)">
+        <span style="font-size:13px;color:var(--gray-700)">Mostrando <strong>5</strong> solicitudes</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" disabled>‹ Anterior</button>
+          <button class="btn btn-primary btn-sm" style="pointer-events:none">1</button>
+          <button class="btn btn-secondary btn-sm" disabled>Siguiente ›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  SCREEN 5 — REVISIÓN INDIVIDUAL                          ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="screen-detalle" class="screen">
+  <div class="page-body">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <button class="btn btn-secondary btn-sm" onclick="goTo('screen-revision')">← Listado</button>
+      <div class="page-title" style="margin-bottom:0">Solicitud #SOL-2026-0042</div>
+      <span class="badge badge-review" style="margin-left:4px"><div class="badge-dot"></div>En revisión</span>
+    </div>
+    <div class="page-subtitle">Registrada por Martín Vázquez · 21/04/2026 09:42 · Proyecto</div>
+
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start">
+      <!-- Main content -->
+      <div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">📋 Datos del Proyecto</div>
+          <div class="card-body">
+            <div class="detail-grid">
+              <div class="detail-field"><label>Solicitante</label><p>Martín Vázquez</p></div>
+              <div class="detail-field"><label>Correo</label><p>martin.vc3@gmail.com</p></div>
+              <div class="detail-field"><label>No. de Proyecto</label><p>PROY-2024-087</p></div>
+              <div class="detail-field"><label>PO del Cliente</label><p>PO-556123</p></div>
+              <div class="detail-field"><label>Sales Workflow</label><p>SW-2024-044</p></div>
+              <div class="detail-field"><label>Cliente</label><p>Industrias XYZ</p></div>
+              <div class="detail-field"><label>Máquina</label><p>Fresadora VMC-12</p></div>
+              <div class="detail-field"><label>Número de Serie</label><p>SN-2024-XZ9</p></div>
+              <div class="detail-field"><label>Proveedor</label><p>Aceros del Centro S.A.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">💰 Validación Presupuestaria</div>
+          <div class="card-body">
+            <div class="detail-section">
+              <h4>Documentos adjuntos</h4>
+              <span class="doc-chip">📄 Cotizacion_Aceros_2026.pdf</span>
+              <span class="doc-chip">📄 Workflow_PROY2024-087.pdf</span>
+            </div>
+            <div class="detail-section">
+              <h4>Ítems de la solicitud</h4>
+              <table class="items-table">
+                <thead><tr><th>Descripción</th><th>Cantidad</th><th>P. Unitario</th><th>Total</th></tr></thead>
+                <tbody>
+                  <tr><td>Placa de acero A36 1/4"</td><td>50</td><td>$420.00</td><td>$21,000.00</td></tr>
+                  <tr><td>Soldadura TIG 308L</td><td>30</td><td>$350.00</td><td>$10,500.00</td></tr>
+                  <tr><td>Disco de corte 14"</td><td>100</td><td>$110.00</td><td>$11,000.00</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr><td colspan="3" style="text-align:right;font-weight:700;padding:10px 12px">Total estimado</td><td style="font-weight:700;color:var(--primary);padding:10px 12px">$42,500.00</td></tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="detail-grid" style="margin-top:14px">
+              <div class="detail-field"><label>Incluida en Costing Sheet</label><p>✅ Sí</p></div>
+              <div class="detail-field"><label>Clave SK</label><p>SK-87001</p></div>
+              <div class="detail-field"><label>Monto aprobado</label><p style="font-weight:700;color:var(--primary)">$42,500.00 USD</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">🚚 Logística</div>
+          <div class="card-body">
+            <div class="detail-grid">
+              <div class="detail-field full" style="grid-column:1/-1"><label>Dirección de entrega</label><p>Av. Industrial 450, Col. Parque Industrial, Querétaro, QRO, CP 76130</p></div>
+              <div class="detail-field"><label>Incoterms</label><p>DAP — Delivered At Place</p></div>
+              <div class="detail-field"><label>Contacto OC</label><p>Jorge Ramírez</p></div>
+              <div class="detail-field"><label>Correo contacto</label><p>jorge.ramirez@aceros.com</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div>
+        <!-- Acciones -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">⚡ Acciones</div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-success" onclick="showToast('PO generada correctamente','success');goTo('screen-seguimiento')" style="width:100%;justify-content:center">🖨️ Generar PO</button>
+            <button class="btn btn-primary" onclick="showModal('modal-editar')" style="width:100%;justify-content:center">✏️ Editar solicitud</button>
+            <button class="btn btn-danger" onclick="showModal('modal-devolver')" style="width:100%;justify-content:center">↩️ Devolver a solicitante</button>
+            <button class="btn btn-secondary" onclick="goTo('screen-revision')" style="width:100%;justify-content:center">← Volver al listado</button>
+          </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="card">
+          <div class="card-header">📅 Historial</div>
+          <div class="card-body">
+            <ul class="timeline">
+              <li>
+                <div class="tl-dot ok">✓</div>
+                <div class="tl-content">
+                  <p>Solicitud creada</p>
+                  <span>Martín Vázquez · 21/04/2026 09:42</span>
+                </div>
+              </li>
+              <li>
+                <div class="tl-dot ok">✓</div>
+                <div class="tl-content">
+                  <p>Solicitud enviada a Compras</p>
+                  <span>21/04/2026 09:55</span>
+                </div>
+              </li>
+              <li>
+                <div class="tl-dot cur">●</div>
+                <div class="tl-content">
+                  <p>En revisión por Compras</p>
+                  <span>21/04/2026 10:08 — Activo</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  SCREEN 6 — SEGUIMIENTO DE ÓRDENES DE COMPRA            ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="screen-seguimiento" class="screen">
+  <div class="page-body">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <button class="btn btn-secondary btn-sm" onclick="goTo('screen-landing')">← Inicio</button>
+      <div class="page-title" style="margin-bottom:0">Seguimiento a Órdenes de Compra</div>
+    </div>
+    <div class="page-subtitle">Consulta el avance de tus órdenes de compra emitidas.</div>
+
+    <!-- KPI strip -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px">
+      <div class="card"><div class="card-body" style="text-align:center">
+        <div style="font-size:28px;font-weight:800;color:var(--primary)">4</div>
+        <div style="font-size:12px;color:var(--gray-700)">Total OCs</div>
+      </div></div>
+      <div class="card"><div class="card-body" style="text-align:center">
+        <div style="font-size:28px;font-weight:800;color:var(--accent)">2</div>
+        <div style="font-size:12px;color:var(--gray-700)">PO Enviada</div>
+      </div></div>
+      <div class="card"><div class="card-body" style="text-align:center">
+        <div style="font-size:28px;font-weight:800;color:var(--warning)">1</div>
+        <div style="font-size:12px;color:var(--gray-700)">En tránsito</div>
+      </div></div>
+      <div class="card"><div class="card-body" style="text-align:center">
+        <div style="font-size:28px;font-weight:800;color:var(--success)">1</div>
+        <div style="font-size:12px;color:var(--gray-700)">Factura pagada</div>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="filters-bar">
+        <input class="search-input" type="text" placeholder="Buscar por proyecto, proveedor…" style="max-width:320px">
+        <select class="filter-select">
+          <option>Todos los estatus</option>
+          <option>PO enviada</option>
+          <option>PO procesada</option>
+          <option>Pedido enviado</option>
+          <option>Pedido recibido</option>
+          <option>Factura recibida</option>
+          <option>Factura pagada</option>
+        </select>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>No. OC</th>
+              <th>Proyecto</th>
+              <th>Proveedor</th>
+              <th>Monto</th>
+              <th>Revisión</th>
+              <th>Envío PO</th>
+              <th>Entrega estimada</th>
+              <th>Estatus</th>
+              <th>Última act.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:600">OC-2026-0088</td>
+              <td>PROY-2024-087</td>
+              <td>Aceros del Centro</td>
+              <td style="font-weight:600">$42,500</td>
+              <td class="td-muted">21/04/2026</td>
+              <td class="td-muted">21/04/2026</td>
+              <td class="td-muted">05/05/2026</td>
+              <td><span class="badge badge-review"><div class="badge-dot"></div>PO enviada</span></td>
+              <td class="td-muted">Hoy 10:30</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">OC-2026-0071</td>
+              <td>PROY-2024-055</td>
+              <td>Refacciones Ind. MX</td>
+              <td style="font-weight:600">$15,200</td>
+              <td class="td-muted">18/04/2026</td>
+              <td class="td-muted">19/04/2026</td>
+              <td class="td-muted">28/04/2026</td>
+              <td><span class="badge badge-pending"><div class="badge-dot"></div>Pedido enviado</span></td>
+              <td class="td-muted">20/04/2026</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">OC-2026-0055</td>
+              <td>PROY-2024-032</td>
+              <td>Suministros Técnicos</td>
+              <td style="font-weight:600">$88,000</td>
+              <td class="td-muted">15/04/2026</td>
+              <td class="td-muted">15/04/2026</td>
+              <td class="td-muted">20/04/2026</td>
+              <td><span class="badge badge-approved"><div class="badge-dot"></div>Pedido recibido</span></td>
+              <td class="td-muted">20/04/2026</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">OC-2026-0039</td>
+              <td>PROY-2024-011</td>
+              <td>Aceros del Centro</td>
+              <td style="font-weight:600">$7,800</td>
+              <td class="td-muted">10/04/2026</td>
+              <td class="td-muted">10/04/2026</td>
+              <td class="td-muted">15/04/2026</td>
+              <td><span class="badge badge-approved" style="background:#E8F5E9;color:#1B5E20"><div class="badge-dot" style="background:#1B5E20"></div>Factura pagada</span></td>
+              <td class="td-muted">17/04/2026</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Progress tracker for first OC -->
+      <div style="padding:20px 24px;border-top:1px solid var(--gray-200)">
+        <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:14px">Progreso OC-2026-0088 (Aceros del Centro)</div>
+        <div class="tracking-progress">
+          <div class="tp-step done">
+            <div class="tp-circle">✓</div>
+            <p>PO enviada</p>
+          </div>
+          <div class="tp-step cur">
+            <div class="tp-circle">●</div>
+            <p>PO procesada</p>
+          </div>
+          <div class="tp-step">
+            <div class="tp-circle"></div>
+            <p>Pedido enviado</p>
+          </div>
+          <div class="tp-step">
+            <div class="tp-circle"></div>
+            <p>Pedido recibido</p>
+          </div>
+          <div class="tp-step">
+            <div class="tp-circle"></div>
+            <p>Factura recibida</p>
+          </div>
+          <div class="tp-step">
+            <div class="tp-circle"></div>
+            <p>Factura pagada</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  MODALS                                                   ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+
+<!-- Modal Devolver -->
+<div class="modal-overlay" id="modal-devolver">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>↩️ Devolver solicitud al solicitante</h3>
+      <button class="modal-close" onclick="closeModal('modal-devolver')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-warning">
+        <span class="alert-icon">⚠️</span>
+        <span>El solicitante recibirá notificación y podrá hacer correcciones. La solicitud quedará en estatus <strong>Devuelta</strong>.</span>
+      </div>
+      <div class="form-group">
+        <label>Motivo de devolución <span class="req">*</span></label>
+        <textarea placeholder="Describe qué debe corregir el solicitante..." style="min-height:100px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-devolver')">Cancelar</button>
+      <button class="btn btn-danger" onclick="closeModal('modal-devolver');showToast('Solicitud devuelta al solicitante','warning');goTo('screen-revision')">↩️ Confirmar devolución</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar (Compras) -->
+<div class="modal-overlay" id="modal-editar">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Editar solicitud — Compras</h3>
+      <button class="modal-close" onclick="closeModal('modal-editar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info">
+        <span class="alert-icon">ℹ️</span>
+        <span>Como área de Compras puedes editar todos los campos. Los cambios quedarán registrados en el historial.</span>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label>Proveedor</label>
+          <select><option>Aceros del Centro S.A.</option><option>Refacciones Industriales MX</option></select>
+        </div>
+        <div class="form-group">
+          <label>Monto aprobado (USD)</label>
+          <input type="number" value="42500">
+        </div>
+        <div class="form-group full">
+          <label>Nota interna Compras</label>
+          <textarea placeholder="Observaciones internas del área de Compras…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-editar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-editar');showToast('Cambios guardados correctamente','success')">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  JAVASCRIPT                                              ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<script>
+// ── Navigation ──────────────────────────────────────────────
+const screenTitles = {
+  'screen-landing':    '',
+  'screen-solicitud':  'Nueva Solicitud',
+  'screen-proveedor':  'Alta de Proveedor',
+  'screen-revision':   'Revisión de Solicitudes',
+  'screen-detalle':    'Revisión Individual',
+  'screen-seguimiento':'Seguimiento OC',
+};
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('topbar-breadcrumb').textContent = screenTitles[id] || '';
+  window.scrollTo(0, 0);
+  if (id === 'screen-solicitud') updateSummary();
+}
+
+// ── Tab switcher ─────────────────────────────────────────────
+let currentTab = 1;
+function switchTab(n) {
+  currentTab = n;
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', i+1 === n);
+  });
+  document.querySelectorAll('.tab-panel').forEach((p,i) => {
+    p.classList.toggle('active', i+1 === n);
+  });
+  document.querySelectorAll('.step').forEach((s,i) => {
+    s.classList.toggle('active', i+1 === n);
+  });
+  if (n === 3) updateSummary();
+}
+
+function nextTab(n) {
+  if (validateTab(n)) {
+    markTabDone(n);
+    switchTab(n + 1);
+  }
+}
+
+function markTabDone(n) {
+  const btn = document.getElementById(`tab-btn-${n}`);
+  const chk = document.getElementById(`check-${n}`);
+  const step = document.getElementById(`step-${n}`);
+  const line = document.getElementById(`line-${n}`);
+  if (btn) btn.classList.add('done');
+  if (chk) chk.textContent = '✓';
+  if (step) { step.classList.remove('active'); step.classList.add('done'); }
+  if (line) line.classList.add('done');
+}
+
+// ── Tab 1 validation ─────────────────────────────────────────
+function validateTab(n) {
+  let valid = true;
+  if (n === 1) {
+    const fields = [
+      ['f-num-proyecto','err-num-proyecto'],
+      ['f-po-cliente','err-po-cliente'],
+      ['f-sales-wf','err-sales-wf'],
+      ['f-cliente','err-cliente'],
+      ['f-maquina','err-maquina'],
+      ['f-num-serie','err-num-serie'],
+      ['f-proveedor','err-proveedor'],
+    ];
+    fields.forEach(([fid, eid]) => {
+      const el = document.getElementById(fid);
+      const err = document.getElementById(eid);
+      if (!el.value.trim()) {
+        el.classList.add('error');
+        err.classList.add('show');
+        valid = false;
+      } else {
+        el.classList.remove('error');
+        err.classList.remove('show');
+      }
+    });
+  }
+  if (n === 2) {
+    const cotiz = document.getElementById('zone-cotizacion');
+    const wflow = document.getElementById('zone-workflow');
+    const cotizFile = document.getElementById('file-cotizacion').files.length;
+    const wflowFile = document.getElementById('file-workflow').files.length;
+    if (!cotizFile) {
+      document.getElementById('err-cotizacion').classList.add('show');
+      cotiz.classList.add('required-missing'); valid = false;
+    } else {
+      document.getElementById('err-cotizacion').classList.remove('show');
+      cotiz.classList.remove('required-missing');
+    }
+    if (!wflowFile) {
+      document.getElementById('err-workflow').classList.add('show');
+      wflow.classList.add('required-missing'); valid = false;
+    } else {
+      document.getElementById('err-workflow').classList.remove('show');
+      wflow.classList.remove('required-missing');
+    }
+  }
+  if (!valid) showToast('Completa los campos requeridos', 'error');
+  return valid;
+}
+
+// ── Costing toggle ───────────────────────────────────────────
+function toggleCosting(radio) {
+  const si = document.getElementById('block-costing-si');
+  const no = document.getElementById('block-costing-no');
+  si.classList.toggle('hidden', radio.value !== 'si');
+  no.classList.toggle('hidden', radio.value !== 'no');
+}
+
+// ── File upload ──────────────────────────────────────────────
+function triggerFile(id) { document.getElementById(id).click(); }
+function fileSelected(input, zoneId, nameId) {
+  const zone = document.getElementById(zoneId);
+  const nameEl = document.getElementById(nameId);
+  if (input.files.length) {
+    zone.classList.add('has-file');
+    zone.classList.remove('required-missing');
+    nameEl.textContent = '✓ ' + input.files[0].name;
+  }
+}
+
+// ── Items table ──────────────────────────────────────────────
+let itemRowCount = 1;
+function addItemRow() {
+  itemRowCount++;
+  const tbody = document.getElementById('items-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" placeholder="Descripción del ítem" oninput="calcTotal(this)"></td>
+    <td><input type="number" placeholder="1" min="1" oninput="calcTotal(this)"></td>
+    <td><input type="number" placeholder="0.00" step="0.01" oninput="calcTotal(this)"></td>
+    <td class="td-total">$0.00</td>
+    <td><button class="btn-icon" onclick="removeRow(this)" title="Eliminar">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function removeRow(btn) {
+  btn.closest('tr').remove();
+  recalcGrand();
+}
+
+function calcTotal(input) {
+  const row = input.closest('tr');
+  const inputs = row.querySelectorAll('input[type=number]');
+  const qty   = parseFloat(inputs[0]?.value) || 0;
+  const price = parseFloat(inputs[1]?.value) || 0;
+  const total = qty * price;
+  row.querySelector('.td-total').textContent = '$' + total.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+  recalcGrand();
+}
+
+function recalcGrand() {
+  let grand = 0;
+  document.querySelectorAll('.td-total').forEach(td => {
+    grand += parseFloat(td.textContent.replace(/[$,]/g,'')) || 0;
+  });
+  const fmt = '$' + grand.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('grand-total').textContent = fmt;
+  document.getElementById('sum-total').textContent = fmt;
+}
+
+// ── Summary update ───────────────────────────────────────────
+function updateSummary() {
+  const prov = document.getElementById('f-proveedor');
+  const proj = document.getElementById('f-num-proyecto');
+  const cli  = document.getElementById('f-cliente');
+  const cost = document.querySelector('input[name=costing]:checked');
+  if (prov) document.getElementById('sum-proveedor').textContent = prov.value || '—';
+  if (proj) document.getElementById('sum-proyecto').textContent  = proj.value || '—';
+  if (cli)  document.getElementById('sum-cliente').textContent   = cli.value  || '—';
+  if (cost) document.getElementById('sum-costing').textContent   = cost.value === 'si' ? 'Sí' : 'No';
+  recalcGrand();
+}
+
+// ── Draft save ───────────────────────────────────────────────
+function saveDraft() { showToast('Borrador guardado correctamente', 'success'); }
+
+// ── Submit ───────────────────────────────────────────────────
+function submitSolicitud() {
+  const dir = document.getElementById('f-direccion');
+  const inc = document.getElementById('f-incoterms');
+  const con = document.getElementById('f-contacto');
+  const eml = document.getElementById('f-email-contacto');
+  let valid = true;
+  [[dir,'err-direccion'],[inc,'err-incoterms'],[con,'err-contacto'],[eml,'err-email-contacto']].forEach(([el,eid]) => {
+    if (!el.value.trim()) {
+      el.classList.add('error');
+      document.getElementById(eid).classList.add('show');
+      valid = false;
+    } else {
+      el.classList.remove('error');
+      document.getElementById(eid).classList.remove('show');
+    }
+  });
+  if (!valid) { showToast('Completa los campos requeridos en Logística', 'error'); return; }
+  markTabDone(3);
+  showToast('✉️ Solicitud enviada correctamente al área de Compras', 'success');
+  setTimeout(() => goTo('screen-landing'), 1800);
+}
+
+// ── Table filter ─────────────────────────────────────────────
+function filterTable(q) {
+  const rows = document.querySelectorAll('#revision-table tbody tr');
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+function filterByStatus(status) {
+  const rows = document.querySelectorAll('#revision-table tbody tr');
+  rows.forEach(row => {
+    row.style.display = (!status || row.dataset.status === status) ? '' : 'none';
+  });
+}
+
+// ── Modals ───────────────────────────────────────────────────
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ── Toasts ───────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  const icon = { success:'✅', warning:'⚠️', error:'❌' }[type] || 'ℹ️';
+  toast.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// init
+document.getElementById('topbar-breadcrumb').textContent = '';
+</script>
+</body>
+</html>
