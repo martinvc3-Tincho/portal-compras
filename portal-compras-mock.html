@@ -150,6 +150,7 @@
   .module-icon.teal   { background: #E0F7FA; }
   .module-icon.orange { background: #FFF3E0; }
   .module-icon.green  { background: #E8F5E9; }
+  .module-icon.purple { background: #F3E5F5; }
   .module-card h3 { font-size: 15px; font-weight: 700; color: var(--primary); }
   .module-card p  { font-size: 13px; color: var(--gray-700); line-height: 1.5; }
   .module-badge {
@@ -565,6 +566,27 @@
   .alert-success { background: #E8F5E9; border: 1px solid #C8E6C9; color: var(--success); }
   .alert .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
+  /* ─── PERMISSION TOGGLE SWITCH ──────────────────────────────── */
+  .perm-toggle {
+    position: relative; display: inline-block;
+    width: 42px; height: 24px; cursor: pointer;
+  }
+  .perm-toggle input { opacity: 0; width: 0; height: 0; }
+  .perm-slider {
+    position: absolute; inset: 0;
+    background: var(--gray-300); border-radius: 24px;
+    transition: background .2s;
+  }
+  .perm-slider::before {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%;
+    transition: transform .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .perm-toggle input:checked + .perm-slider { background: var(--accent); }
+  .perm-toggle input:checked + .perm-slider::before { transform: translateX(18px); }
+
   /* ─── RESPONSIVE ─────────────────────────────────────────────── */
   @media (max-width: 768px) {
     .page-body { padding: 16px; }
@@ -604,7 +626,7 @@
 <div id="screen-landing" class="screen active">
   <div class="page-body">
     <div class="landing-welcome">
-      <div class="welcome-icon">🛒</div>
+      <div class="welcome-icon">🏭</div>
       <div>
         <h2>Bienvenido, Martín</h2>
         <p>Portal de Compras — Etapa 1: Solicitud de Proyecto. Selecciona el módulo que deseas utilizar.</p>
@@ -641,6 +663,13 @@
         <h3>Revisión de Solicitudes</h3>
         <p>Área de Compras: consulta, revisa y da seguimiento a todas las solicitudes registradas.</p>
         <span class="module-badge active">✔ Disponible — Compras</span>
+      </div>
+
+      <div class="module-card" onclick="goTo('screen-admin')">
+        <div class="module-icon purple">⚙️</div>
+        <h3>Administración</h3>
+        <p>Gestión de usuarios, roles y permisos de acceso a los módulos del portal. Solo disponible para administradores.</p>
+        <span class="module-badge active" style="background:#F3E5F5;color:#6A1B9A">✔ Disponible — Admin</span>
       </div>
     </div>
 
@@ -1565,6 +1594,311 @@
 </div>
 
 <!-- ╔══════════════════════════════════════════════════════════╗
+     ║  SCREEN 7 — ADMINISTRACIÓN                               ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="screen-admin" class="screen">
+  <div class="page-body">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <button class="btn btn-secondary btn-sm" onclick="goTo('screen-landing')">← Inicio</button>
+      <div class="page-title" style="margin-bottom:0">Administración del Portal</div>
+    </div>
+    <div class="page-subtitle">Gestión de usuarios, roles y permisos de acceso a los módulos del portal.</div>
+
+    <!-- Admin tabs -->
+    <div class="card" style="margin-bottom:24px">
+      <div style="padding:0 24px">
+        <div class="tabs-nav">
+          <button class="tab-btn active" id="admin-tab-btn-1" onclick="switchAdminTab(1)">
+            <span>👤</span> Usuarios
+          </button>
+          <button class="tab-btn" id="admin-tab-btn-2" onclick="switchAdminTab(2)">
+            <span>🔐</span> Permisos de Acceso
+          </button>
+        </div>
+      </div>
+
+      <!-- ── PESTAÑA 1: Usuarios ── -->
+      <div class="tab-panel active" id="admin-panel-1">
+        <!-- Barra superior -->
+        <div class="filters-bar" style="justify-content:space-between">
+          <div style="display:flex;gap:10px;align-items:center;flex:1">
+            <input class="search-input" type="text" placeholder="Buscar por nombre, correo o área…" style="max-width:320px"
+              oninput="filterUsers(this.value)">
+            <select class="filter-select" id="filter-rol" onchange="filterUsers()">
+              <option value="">Todos los roles</option>
+              <option value="Administrador">Administrador</option>
+              <option value="Compras">Compras</option>
+              <option value="Solicitante">Solicitante</option>
+              <option value="Solo lectura">Solo lectura</option>
+            </select>
+            <select class="filter-select" id="filter-estado" onchange="filterUsers()">
+              <option value="">Todos los estados</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModalUsuario()">＋ Nuevo usuario</button>
+        </div>
+
+        <div style="overflow-x:auto">
+          <table class="data-table" id="tabla-usuarios">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Correo</th>
+                <th>Área / Depto.</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Último acceso</th>
+                <th style="text-align:center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-usuarios">
+              <tr data-rol="Administrador" data-estado="Activo">
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div class="avatar" style="background:#6A1B9A;font-size:11px">MV</div>
+                    <div><div style="font-weight:600">Martín Vázquez</div><div class="td-muted">martin.vc3@gmail.com</div></div>
+                  </div>
+                </td>
+                <td class="td-muted">martin.vc3@gmail.com</td>
+                <td>Administración</td>
+                <td><span class="badge" style="background:#F3E5F5;color:#6A1B9A">Administrador</span></td>
+                <td><span class="badge badge-approved"><div class="badge-dot"></div>Activo</span></td>
+                <td class="td-muted">Hoy 10:45</td>
+                <td style="text-align:center">
+                  <button class="btn btn-secondary btn-sm" onclick="editarUsuario(this)">✏️ Editar</button>
+                  <button class="btn btn-sm" style="background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2" onclick="toggleEstado(this)">⏸ Desactivar</button>
+                </td>
+              </tr>
+              <tr data-rol="Compras" data-estado="Activo">
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div class="avatar" style="background:var(--accent);font-size:11px">LG</div>
+                    <div><div style="font-weight:600">Laura González</div><div class="td-muted">l.gonzalez@empresa.mx</div></div>
+                  </div>
+                </td>
+                <td class="td-muted">l.gonzalez@empresa.mx</td>
+                <td>Compras</td>
+                <td><span class="badge badge-review">Compras</span></td>
+                <td><span class="badge badge-approved"><div class="badge-dot"></div>Activo</span></td>
+                <td class="td-muted">Hoy 09:30</td>
+                <td style="text-align:center">
+                  <button class="btn btn-secondary btn-sm" onclick="editarUsuario(this)">✏️ Editar</button>
+                  <button class="btn btn-sm" style="background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2" onclick="toggleEstado(this)">⏸ Desactivar</button>
+                </td>
+              </tr>
+              <tr data-rol="Solicitante" data-estado="Activo">
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div class="avatar" style="background:var(--primary);font-size:11px">CR</div>
+                    <div><div style="font-weight:600">Carlos Ramos</div><div class="td-muted">c.ramos@empresa.mx</div></div>
+                  </div>
+                </td>
+                <td class="td-muted">c.ramos@empresa.mx</td>
+                <td>Ingeniería</td>
+                <td><span class="badge badge-pending">Solicitante</span></td>
+                <td><span class="badge badge-approved"><div class="badge-dot"></div>Activo</span></td>
+                <td class="td-muted">20/04/2026</td>
+                <td style="text-align:center">
+                  <button class="btn btn-secondary btn-sm" onclick="editarUsuario(this)">✏️ Editar</button>
+                  <button class="btn btn-sm" style="background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2" onclick="toggleEstado(this)">⏸ Desactivar</button>
+                </td>
+              </tr>
+              <tr data-rol="Solicitante" data-estado="Activo">
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div class="avatar" style="background:var(--success);font-size:11px">AP</div>
+                    <div><div style="font-weight:600">Ana Pérez</div><div class="td-muted">a.perez@empresa.mx</div></div>
+                  </div>
+                </td>
+                <td class="td-muted">a.perez@empresa.mx</td>
+                <td>Operaciones</td>
+                <td><span class="badge badge-pending">Solicitante</span></td>
+                <td><span class="badge badge-approved"><div class="badge-dot"></div>Activo</span></td>
+                <td class="td-muted">19/04/2026</td>
+                <td style="text-align:center">
+                  <button class="btn btn-secondary btn-sm" onclick="editarUsuario(this)">✏️ Editar</button>
+                  <button class="btn btn-sm" style="background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2" onclick="toggleEstado(this)">⏸ Desactivar</button>
+                </td>
+              </tr>
+              <tr data-rol="Solo lectura" data-estado="Inactivo">
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div class="avatar" style="background:var(--gray-500);font-size:11px">JM</div>
+                    <div><div style="font-weight:600">Jorge Méndez</div><div class="td-muted">j.mendez@empresa.mx</div></div>
+                  </div>
+                </td>
+                <td class="td-muted">j.mendez@empresa.mx</td>
+                <td>Finanzas</td>
+                <td><span class="badge badge-draft">Solo lectura</span></td>
+                <td><span class="badge badge-draft"><div class="badge-dot"></div>Inactivo</span></td>
+                <td class="td-muted">05/03/2026</td>
+                <td style="text-align:center">
+                  <button class="btn btn-secondary btn-sm" onclick="editarUsuario(this)">✏️ Editar</button>
+                  <button class="btn btn-sm" style="background:#E8F5E9;color:#2E7D32;border:1px solid #C8E6C9" onclick="toggleEstado(this)">▶ Activar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="padding:12px 20px;border-top:1px solid var(--gray-200);font-size:12px;color:var(--gray-500)">
+          Mostrando <span id="user-count">5</span> usuarios
+        </div>
+      </div>
+
+      <!-- ── PESTAÑA 2: Permisos de Acceso ── -->
+      <div class="tab-panel" id="admin-panel-2">
+        <div class="card-body">
+          <div class="alert alert-info" style="margin-bottom:20px">
+            <span class="alert-icon">ℹ️</span>
+            <span>Define qué módulos del portal puede acceder cada rol. Los cambios se aplican de forma inmediata a todos los usuarios con ese rol.</span>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table" id="tabla-permisos">
+              <thead>
+                <tr>
+                  <th style="min-width:220px">Módulo</th>
+                  <th style="text-align:center;min-width:130px">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                      <span class="badge" style="background:#F3E5F5;color:#6A1B9A">Administrador</span>
+                    </div>
+                  </th>
+                  <th style="text-align:center;min-width:130px">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                      <span class="badge badge-review">Compras</span>
+                    </div>
+                  </th>
+                  <th style="text-align:center;min-width:130px">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                      <span class="badge badge-pending">Solicitante</span>
+                    </div>
+                  </th>
+                  <th style="text-align:center;min-width:130px">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                      <span class="badge badge-draft">Solo lectura</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div style="font-weight:600">📋 Alta de Solicitud de Compra</div>
+                    <div class="td-muted">Crear y enviar nuevas solicitudes de compra</div>
+                  </td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="font-weight:600">🏢 Solicitud de Alta de Proveedor</div>
+                    <div class="td-muted">Registrar nuevos proveedores en el catálogo</div>
+                  </td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="font-weight:600">📦 Seguimiento a Órdenes de Compra</div>
+                    <div class="td-muted">Consultar estado y avance de órdenes emitidas</div>
+                  </td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="font-weight:600">🔍 Revisión de Solicitudes</div>
+                    <div class="td-muted">Revisar, aprobar o devolver solicitudes registradas</div>
+                  </td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="font-weight:600">⚙️ Administración</div>
+                    <div class="td-muted">Gestión de usuarios y permisos del portal</div>
+                  </td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" checked onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                  <td style="text-align:center"><label class="perm-toggle"><input type="checkbox" onchange="onPermChange(this)"><span class="perm-slider"></span></label></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="action-bar" style="margin-top:20px;border-radius:var(--radius);border:1px solid var(--gray-200)">
+            <div style="font-size:12px;color:var(--gray-500)" id="permisos-status">Sin cambios pendientes</div>
+            <div class="action-bar-right">
+              <button class="btn btn-secondary btn-sm" id="btn-descartar-permisos" onclick="descartarPermisos()" style="display:none">Descartar</button>
+              <button class="btn btn-primary btn-sm" id="btn-guardar-permisos" onclick="guardarPermisos()" style="display:none">💾 Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuevo / Editar Usuario -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 id="modal-usuario-title">👤 Nuevo usuario</h3>
+      <button class="modal-close" onclick="closeModal('modal-usuario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label>Nombre completo <span class="req">*</span></label>
+          <input type="text" id="mu-nombre" placeholder="Ej. Ana López">
+        </div>
+        <div class="form-group">
+          <label>Correo electrónico <span class="req">*</span></label>
+          <input type="email" id="mu-email" placeholder="usuario@empresa.mx">
+        </div>
+        <div class="form-group">
+          <label>Área / Departamento <span class="req">*</span></label>
+          <input type="text" id="mu-area" placeholder="Ej. Ingeniería">
+        </div>
+        <div class="form-group">
+          <label>Rol <span class="req">*</span></label>
+          <select id="mu-rol">
+            <option value="">— Selecciona —</option>
+            <option>Administrador</option>
+            <option>Compras</option>
+            <option>Solicitante</option>
+            <option>Solo lectura</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="mu-estado">
+            <option>Activo</option>
+            <option>Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarUsuario()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
      ║  MODALS                                                   ║
      ╚══════════════════════════════════════════════════════════╝ -->
 
@@ -1638,6 +1972,7 @@ const screenTitles = {
   'screen-revision':   'Revisión de Solicitudes',
   'screen-detalle':    'Revisión Individual',
   'screen-seguimiento':'Seguimiento OC',
+  'screen-admin':      'Administración',
 };
 
 function goTo(id) {
@@ -1862,6 +2197,122 @@ function showToast(msg, type = '') {
 
 // init
 document.getElementById('topbar-breadcrumb').textContent = '';
+
+// ── Admin — Tab switcher ─────────────────────────────────────
+function switchAdminTab(n) {
+  document.querySelectorAll('[id^="admin-tab-btn-"]').forEach((b, i) => {
+    b.classList.toggle('active', i + 1 === n);
+  });
+  document.querySelectorAll('[id^="admin-panel-"]').forEach((p, i) => {
+    p.classList.toggle('active', i + 1 === n);
+  });
+}
+
+// ── Admin — Filtrado de usuarios ─────────────────────────────
+function filterUsers(query) {
+  const q = (typeof query === 'string' ? query : document.querySelector('.search-input') && document.querySelector('#admin-panel-1 .search-input') ? document.querySelector('#admin-panel-1 .search-input').value : '').toLowerCase();
+  const rol = document.getElementById('filter-rol') ? document.getElementById('filter-rol').value : '';
+  const estado = document.getElementById('filter-estado') ? document.getElementById('filter-estado').value : '';
+  const rows = document.querySelectorAll('#tbody-usuarios tr');
+  let count = 0;
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    const rowRol = row.dataset.rol || '';
+    const rowEstado = row.dataset.estado || '';
+    const matchQ = !q || text.includes(q);
+    const matchRol = !rol || rowRol === rol;
+    const matchEstado = !estado || rowEstado === estado;
+    const visible = matchQ && matchRol && matchEstado;
+    row.style.display = visible ? '' : 'none';
+    if (visible) count++;
+  });
+  const cnt = document.getElementById('user-count');
+  if (cnt) cnt.textContent = count;
+}
+
+// ── Admin — Activar / Desactivar usuario ─────────────────────
+function toggleEstado(btn) {
+  const row = btn.closest('tr');
+  const badgeCell = row.querySelector('td:nth-child(5)');
+  const isActive = row.dataset.estado === 'Activo';
+  if (isActive) {
+    row.dataset.estado = 'Inactivo';
+    badgeCell.innerHTML = '<span class="badge badge-draft"><div class="badge-dot"></div>Inactivo</span>';
+    btn.textContent = '▶ Activar';
+    btn.style.cssText = 'background:#E8F5E9;color:#2E7D32;border:1px solid #C8E6C9';
+    showToast('Usuario desactivado', 'warning');
+  } else {
+    row.dataset.estado = 'Activo';
+    badgeCell.innerHTML = '<span class="badge badge-approved"><div class="badge-dot"></div>Activo</span>';
+    btn.textContent = '⏸ Desactivar';
+    btn.style.cssText = 'background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2';
+    showToast('Usuario activado correctamente', 'success');
+  }
+  btn.className = 'btn btn-sm';
+}
+
+// ── Admin — Abrir modal nuevo usuario ────────────────────────
+function openModalUsuario(editMode) {
+  if (!editMode) {
+    document.getElementById('modal-usuario-title').textContent = '👤 Nuevo usuario';
+    document.getElementById('mu-nombre').value = '';
+    document.getElementById('mu-email').value = '';
+    document.getElementById('mu-area').value = '';
+    document.getElementById('mu-rol').value = '';
+    document.getElementById('mu-estado').value = 'Activo';
+  }
+  document.getElementById('modal-usuario').classList.add('show');
+}
+
+// ── Admin — Editar usuario ────────────────────────────────────
+function editarUsuario(btn) {
+  const row = btn.closest('tr');
+  const nombre = row.querySelector('td:nth-child(1) div div:first-child').textContent.trim();
+  const correo = row.querySelector('td:nth-child(2)').textContent.trim();
+  const area   = row.querySelector('td:nth-child(3)').textContent.trim();
+  const rol    = row.dataset.rol;
+  const estado = row.dataset.estado;
+  document.getElementById('modal-usuario-title').textContent = '✏️ Editar usuario';
+  document.getElementById('mu-nombre').value = nombre;
+  document.getElementById('mu-email').value  = correo;
+  document.getElementById('mu-area').value   = area;
+  document.getElementById('mu-rol').value    = rol;
+  document.getElementById('mu-estado').value = estado;
+  openModalUsuario(true);
+}
+
+// ── Admin — Guardar usuario (mock) ───────────────────────────
+function guardarUsuario() {
+  const nombre = document.getElementById('mu-nombre').value.trim();
+  const email  = document.getElementById('mu-email').value.trim();
+  const area   = document.getElementById('mu-area').value.trim();
+  const rol    = document.getElementById('mu-rol').value;
+  if (!nombre || !email || !area || !rol) {
+    showToast('Completa todos los campos requeridos', 'error');
+    return;
+  }
+  closeModal('modal-usuario');
+  showToast('Usuario guardado correctamente', 'success');
+}
+
+// ── Admin — Permisos ──────────────────────────────────────────
+let permisosModificados = false;
+function onPermChange(cb) {
+  permisosModificados = true;
+  document.getElementById('permisos-status').textContent = '⚠️ Tienes cambios sin guardar';
+  document.getElementById('btn-guardar-permisos').style.display = '';
+  document.getElementById('btn-descartar-permisos').style.display = '';
+}
+function guardarPermisos() {
+  permisosModificados = false;
+  document.getElementById('permisos-status').textContent = '✅ Permisos actualizados correctamente';
+  document.getElementById('btn-guardar-permisos').style.display = 'none';
+  document.getElementById('btn-descartar-permisos').style.display = 'none';
+  showToast('Permisos guardados correctamente', 'success');
+}
+function descartarPermisos() {
+  location.reload();
+}
 </script>
 </body>
 </html>
